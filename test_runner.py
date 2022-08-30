@@ -8,6 +8,6 @@ if __name__ == '__main__':
     sp_pw = 'Ilyaz1987'
     dt = date.today() - timedelta(days=1)
 
-    generateMorningReport(dt, 'D:\\tmp\\', sp_login, sp_pw);
+    generateMorningReport(dt, './', sp_login, sp_pw);
 
     pass

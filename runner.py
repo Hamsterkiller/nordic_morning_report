@@ -4,10 +4,10 @@ from loader import load_weather_data, load_thermals_data
 import logging
 import numpy as np
 import math
+import os
 
 
 def generate_report_comment(values: dict, dt: date):
-
     """
     Produce comment text
     :param values: dict with numeric values of key indices
@@ -110,7 +110,7 @@ def generate_report_comment(values: dict, dt: date):
         oil_delta_dir = 'up'
 
     report_comment = f"""
-    EC12 adjusted is forecasting {ec12adj_precip} TWh, {abs(ec12adj_precip_delta_norm) } TWh {ec12adj_precip_norm_dir} normal \
+    EC12 adjusted is forecasting {ec12adj_precip} TWh, {abs(ec12adj_precip_delta_norm)} TWh {ec12adj_precip_norm_dir} normal \
     and {abs(ec12adj_precip_delta_prev)} TWh {ec12adj_precip_prev_dir} than EC12 SMHI yesterday. \
     Temperature index is at {ec12adj_temp} degrees, {abs(ec12adj_temp_delta_norma)}°C {ec12adj_temp_norma_dir} than \
     normal and {ec12adj_temp_delta_prev}°C {ec12adj_temp_prev_dir} than yesterday. \
@@ -145,7 +145,7 @@ def generateMorningReport(dt: date, out_folder: str, sp_login: str, sp_pw: str):
     out_file = out_folder + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
 
     # load weather data
-    weather_data = load_weather_data(dt)
+    # weather_data = load_weather_data(dt)
 
     # load thermals data
     thermals_data = load_thermals_data(dt)

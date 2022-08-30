@@ -1,13 +1,65 @@
+import os
+import time
 from datetime import date, timedelta
 import logging
-import requests
 import json
 import pandas as pd
 import numpy as np
 import requests
-from bs4 import BeautifulSoup
-import re
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+import platform
+import time
+
+
+def montel_log_out(driver: webdriver, original_window: str):
+    """
+    Log out from Montel
+    :param driver: selenium webdriver
+    :param original_window: original window id
+    :return: void
+    """
+    logout_btn = driver.find_element(by='id', value='ctl00_Top_lnkLogOut')
+    logout_btn.send_keys(Keys.RETURN)
+
+
+def switch_to_new_window(driver: webdriver, original_window: str):
+    """
+    Check if there's only two windows opened and switch to second (not initial)
+    :param driver: selenium webdriver object
+    :param original_window: original window id
+    :return: void
+    """
+    try:
+        assert len(driver.window_handles) == 2
+    except AssertionError:
+        montel_log_out(driver, original_window)
+        raise Exception('More than 2 windows are open!')
+    # Loop through until we find a new window handle
+    for window_handle in driver.window_handles:
+        if window_handle != original_window:
+            driver.switch_to.window(window_handle)
+            break
+
+
+def auth_to_montel(driver: webdriver, login: str, pw: str):
+    """
+    Authenticate on Montel
+    :param driver: selenium webdriver
+    :param login: Montel login
+    :param pw: Montel password
+    :return: void
+    """
+    driver.get("https://app.montelnews.com/en/default.aspx")
+    user_name_input = driver.find_element(by='id', value='LoginForm1_LoginView1_Login1_UserName')
+    user_name_input.send_keys(login)
+    password_input = driver.find_element(by='id', value='LoginForm1_LoginView1_Login1_Password')
+    password_input.send_keys(pw)
+    password_input.send_keys(Keys.RETURN)
+    time.sleep(5)
 
 
 # loading price_independent bids
@@ -67,7 +119,7 @@ def load_weather_data(dt: date):
     """
     series_list = ['SMHITEMPNP_F', 'SMHITEMPNP_L', 'TEMPNP_N', 'SMHIPENNP_F', 'SMHIPENNP_L', 'SKMPENNP_N', \
                    'EC00TEMPNP_L', 'EC00PENNP_L', 'EC12TEMPNP_F', 'PENNPACCMEAN_L', 'EC12PENNP_F', 'NCGFS00PENNP_F']
-                  # 'PENNPACCMEAN', 'PENNPACCMAX', 'PENNPACCMIN']
+    # 'PENNPACCMEAN', 'PENNPACCMAX', 'PENNPACCMIN']
 
     interval = 'day'
     series_url = generate_series_url(series_list, interval, dt - timedelta(days=1), dt + timedelta(days=9))
@@ -138,16 +190,51 @@ def load_thermals_data(dt: date):
         print("Bad result")
 
     URL = "https://app.montelnews.com/en/default.aspx"
+    # driver = webdriver.Chrome('$HOME/Users/ilya/Work/nordic_morning_report/chromedriver')
+    try:
+        if 'mac' in platform.platform():
+            driver = webdriver.Safari()
+            browser_name = 'Safari'
+        else:
+            driver = webdriver.Chrome()
+            browser_name = 'Chrome'
+    except Exception:
+        raise Exception(f'No {browser_name} browser driver was found!')
 
-    driver = webdriver.Chrome()
-    driver.get("https://app.montelnews.com/en/default.aspx")
-    user_name_input = driver.find_element(by='id', value='LoginForm1_LoginView1_Login1_UserName')
-    user_name_input.send_keys('skmq2012_1')
-    password_input = driver.find_element(by='id', value='LoginForm1_LoginView1_Login1_Password')
-    password_input.send_keys('mpred1')
-    sign_in_btn = driver.find_element(by='id', value='LoginForm1_LoginView1_Login1_LoginButton')
-    sign_in_btn.click()
+    # Setup wait for later
+    wait = WebDriverWait(driver, 10)
+
+    # set prefered window size
+    driver.set_window_size(height=1024, width=768)
+
+    # authenticate to Montel
+    auth_to_montel(driver, 'skm2012_1', 'mpred1')
+
+    # if account is busy - authenticate with other available account
+    if 'support@montelgroup.com' in driver.page_source:
+        auth_to_montel(driver, 'skm2012_2', 'mpred2')
+        # if other is busy too - raise an error
+        if 'support@montelgroup.com' in driver.page_source:
+            raise Exception('All Montel accounts are busy!')
+
+    # Store the ID of the original window
+    original_window = driver.current_window_handle
+
+    # get coal closing and NP-closing price
     driver.get('https://app.montelnews.com/Exchanges/ICE/coal.aspx?249')
+    time.sleep(5)
 
+    # Choose last trading session
+    fq_last = driver.find_element(by='id', value='ctl00_m_r6_C_t6_et_b5e8fd6b4f518dbfa10dedb5c6cd0040_LL')
+    fq_last.send_keys(Keys.RETURN)
 
+    # wait until ssecond window is open
+    wait.until(EC.number_of_windows_to_be(2))
+
+    # set second window as active
+    switch_to_new_window(driver, original_window)
+
+    # find 'Previous' button
+    prev_button = driver.find_element(by='id', value='btn-prev')
+    prev_button.click()
     return result
