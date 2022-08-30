@@ -10,10 +10,37 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
 import platform
 import time
 
+
+def get_prev_day_data(dt: date, driver: webdriver):
+    """
+
+    :param driver:
+    :param original_window:
+    :return:
+    """
+
+    close_price = 0
+    np_close_price = 0
+
+    # find 'Previous' button
+    prev_button = driver.find_element(by='id', value='btn-prev')
+
+    if dt.weekday() > 0:
+        prev_button.click()
+    else:
+        cnt = 3
+        while cnt > 0:
+            prev_button.click()
+            time.sleep(1)
+            cnt -= 1
+
+    if 'No data' not in driver.page_source:
+
+
+    return close_price, np_close_price
 
 def montel_log_out(driver: webdriver, original_window: str):
     """
@@ -22,6 +49,7 @@ def montel_log_out(driver: webdriver, original_window: str):
     :param original_window: original window id
     :return: void
     """
+    driver.switch_to(original_window)
     logout_btn = driver.find_element(by='id', value='ctl00_Top_lnkLogOut')
     logout_btn.send_keys(Keys.RETURN)
 
@@ -191,13 +219,13 @@ def load_thermals_data(dt: date):
 
     URL = "https://app.montelnews.com/en/default.aspx"
     # driver = webdriver.Chrome('$HOME/Users/ilya/Work/nordic_morning_report/chromedriver')
+    browser_name = 'Chrome'
     try:
         if 'mac' in platform.platform():
             driver = webdriver.Safari()
             browser_name = 'Safari'
         else:
             driver = webdriver.Chrome()
-            browser_name = 'Chrome'
     except Exception:
         raise Exception(f'No {browser_name} browser driver was found!')
 
@@ -234,7 +262,10 @@ def load_thermals_data(dt: date):
     # set second window as active
     switch_to_new_window(driver, original_window)
 
-    # find 'Previous' button
-    prev_button = driver.find_element(by='id', value='btn-prev')
-    prev_button.click()
+    # check if there is data in the previous session
+    coal_close, coal_np_close = get_prev_day_data(dt, driver)
+
+    # go back to main window
+    driver.switch_to.window(original_window)
+
     return result
