@@ -1,6 +1,6 @@
 from datetime import date
 import pandas as pd
-from loader import load_weather_data, load_thermals_data
+from .loader import load_weather_data, load_thermals_data
 import logging
 import numpy as np
 import math
@@ -151,9 +151,11 @@ def generate_report_comment(values: dict, dt: date):
     return report_comment
 
 
-def generateMorningReport(dt: date, out_folder: str):
+def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspower_pw: str):
     """
     Generate morning report comment text
+    :param syspower_pw: syspower login
+    :param syspower_login: syspower password
     :param dt: date of analysis
     :param out_folder: folder to which output text file will be saved
     :return:
@@ -165,7 +167,7 @@ def generateMorningReport(dt: date, out_folder: str):
     out_file = out_folder + '/' + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
 
     # load weather data
-    weather_data = load_weather_data(dt)
+    weather_data = load_weather_data(dt, syspower_login, syspower_pw)
 
     # load thermals data
     thermals_data = load_thermals_data(dt, out_folder)
@@ -177,8 +179,8 @@ def generateMorningReport(dt: date, out_folder: str):
     for k, v in thermals_data.items():
         report_values[k] = v
     #
-    with open('result_report_values', 'wb') as handle:
-        pickle.dump(report_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    # with open('result_report_values', 'wb') as handle:
+    #     pickle.dump(report_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # with open('result_report_values', 'rb') as handle:
     #     report_values = pickle.load(handle)

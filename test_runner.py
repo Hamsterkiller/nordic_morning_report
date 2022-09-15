@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
     sp_login = 'ilya.zemskov@skmenergy.com'
     sp_pw = 'Ilyaz1987'
-    dt = date.today() #- timedelta(days=1)
+    dt = date.today()
 
     generateMorningReport(dt, "/Users/ilya/Downloads");
 

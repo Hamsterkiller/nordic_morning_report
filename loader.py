@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import date, timedelta
 import logging
 import json
@@ -208,11 +207,12 @@ def generate_series_url(series_list: list[str], interval: str, start_date: date,
     return series_url
 
 
-def load_weather_data(dt: date):
+def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
     """
     Load weather data from Syspower (EC12 Adj, EC12 and EC12 Ens series)
+    :param syspower_pw: syspower password
+    :param syspower_login: syspower login
     :param dt: target date
-    :param token: issued auth-token
     :return:
     """
     series_list = ['SMHITEMPNP_F', 'SMHITEMPNP_L', 'TEMPNP_N', 'SMHIPENNP_F', 'SMHIPENNP_L', 'SKMPENNP_N', \
@@ -220,8 +220,8 @@ def load_weather_data(dt: date):
     # 'PENNPACCMEAN', 'PENNPACCMAX', 'PENNPACCMIN']
 
     # login and password for syspower
-    syspower_login = 'ilya.zemskov@skmenergy.com'
-    syspower_pw = 'Ilyaz1987'
+    # syspower_login = 'ilya.zemskov@skmenergy.com'
+    # syspower_pw = 'Ilyaz1987'
 
     interval = 'day'
     series_url = generate_series_url(series_list, interval, dt - timedelta(days=1), dt + timedelta(days=9))
