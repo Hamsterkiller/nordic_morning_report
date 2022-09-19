@@ -1,6 +1,6 @@
 from datetime import date
 import pandas as pd
-from .loader import load_weather_data, load_thermals_data
+from loader import load_weather_data, load_thermals_data
 import logging
 import numpy as np
 import math
@@ -132,6 +132,11 @@ def generate_report_comment(values: dict, dt: date):
     else:
         overall_dir = 'sideways'
 
+    if dt.weekday() > 0:
+        friday = ''
+    else:
+        friday = " on Friday"
+
     report_comment = ''.join([f"EC12 adjusted is forecasting {ec12_adj_precip} TWh, {abs(ec12_adj_precip_delta_norm)} TWh {ec12_adj_precip_norm_dir} normal " ,
     f"and {abs(ec12_adj_precip_delta_prev)} TWh {ec12_adj_precip_prev_dir} than EC12 SMHI yesterday. ",
     f"Temperature index is at {ec12_adj_temp} degrees, {abs(ec12_adj_temp_delta_norm)}°C {ec12_adj_temp_norma_dir} than ",
@@ -141,9 +146,9 @@ def generate_report_comment(values: dict, dt: date):
     f"than EC00 yesterday. EC12 ensemble mean for the next 10 days predicts {ec12ens_precip} TWh, {abs(ec12ens_precip_delta_norm)} ",
     f"TWh {ec12ens_precip_norm_dir} than normal and {abs(ec12ens_precip_delta_prev)} TWh {ec12ens_precip_prev_dir} than EC00 ens yesterday. ",
     f"In ensemble, the temperature index is at {ec12ens_temp} degrees, {abs(ec12ens_temp_delta_prev)} {ec12ens_temp_prev_dir} than earlier ensemble.\n",
-    f"Coal Q{front_quarter}-{front_quarter_year} closed at {coal_closing_price} USD/t, {coal_delta_dir} by {abs(coal_delta)} ",
+    f"Coal Q{front_quarter}-{front_quarter_year} closed at {coal_closing_price} USD/t{friday}, {coal_delta_dir} by {abs(coal_delta)} ",
     f"USD/t after NP close. Gas TTF Q{front_quarter}-{front_quarter_year} contract closed at {gas_closing_price} EUR/MWh, ",
-    f"{gas_delta_dir} by {abs(gas_delta)} EUR/MWh after NP close. Carbon DEC-22 closed at {carbon_closing_price} EUR/t ",
+    f"{gas_delta_dir} by {abs(gas_delta)} EUR/MWh after NP close. Carbon DEC-22 closed at {carbon_closing_price} EUR/t{friday} ",
     f"{carbon_delta_dir} by {abs(carbon_delta)} EUR/t after NP close. Oil Brent ",
     f"front month is traded at {current_oil_price} USD/bbl, {oil_delta_dir} by {abs(oil_delta)} USD/bbl this morning. ",
     f"We expect market to open {overall_dir} on a back of {overall_weather_dir} weather forecasts and {overall_thermals_dir} thermals."])

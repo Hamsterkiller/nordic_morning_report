@@ -101,7 +101,10 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
         data.sort_values(['datetime'], inplace=True)
         data['price'] = pd.to_numeric(data['price'])
         close_price = data['price'].tail(1).values[0]
-        pred_dt = dt - timedelta(days=1)
+        if dt.weekday() > 0:
+            pred_dt = dt - timedelta(days=1)
+        else:
+            pred_dt = dt - timedelta(days=3)
         cutted_to_np_close_data = data[data.datetime < datetime(pred_dt.year, pred_dt.month, pred_dt.day, 16, 0, 0)]
         if not cutted_to_np_close_data.empty:
             np_close_price = cutted_to_np_close_data['price'].tail(1).values[0]
