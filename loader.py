@@ -78,8 +78,8 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
     time.sleep(15)
 
     # wait until download process is completed
-    paths = WebDriverWait(driver, 120, 1).until(every_downloads_chrome)
-    print(paths)
+    # paths = WebDriverWait(driver, 120, 1).until(every_downloads_chrome)
+    # logging.info(paths)
 
     # read downloaded file
     montel_data_files = [el for el in os.listdir(download_dir) if 'export' in el.lower()]
@@ -91,7 +91,9 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
         for f in montel_data_files:
             os.remove(download_dir + '/' + f)
     else:
-        raise Exception('Failed to download the montel data!')
+        logging.error('Failed to download the montel data!')
+        return close_price, np_close_price
+
 
     # read data from the downloaded file
     if not data.empty:
@@ -242,9 +244,9 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
                 if np.isnan(v):
                     na_records[row['#Day']] = k
         missed_data_msg = '\n'.join([f'{k}: {v}' for k, v in na_records.items()])
-        raise Exception(f'Some data is not loaded: \n'
+        logging.debug(f'Some data is not loaded: \n'
                         f'{missed_data_msg}')
-
+    df.fillna(0, inplace=True)
     # construct values dict
     values = {}
     values['ec12_adj_precip'] = np.round(np.sum(df['SMHIPENNP_F'].iloc[1: df.shape[0]]) / 1000, 1)

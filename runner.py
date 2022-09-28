@@ -4,8 +4,19 @@ from loader import load_weather_data, load_thermals_data
 import logging
 import numpy as np
 import math
+import logging
 import pickle
 import os
+
+
+def config_logging(out_folder: str):
+    """
+    Configurate logging
+    :param out_folder: output folder to write logs to
+    :return:
+    """
+    filepath = out_folder + '/morning_report_logs.log'
+    logging.basicConfig(filename=out_folder + '/morning_report_logs.log', level=logging.INFO)
 
 
 def generate_report_comment(values: dict, dt: date):
@@ -82,26 +93,37 @@ def generate_report_comment(values: dict, dt: date):
     coal_closing_price = values['coal_close']
     coal_np_closing_price = values['coal_np_close']
     coal_delta = round(coal_closing_price - coal_np_closing_price, 1)
-    if coal_delta < 0:
-        coal_delta_dir = 'down'
+    if coal_closing_price > 0:
+        if coal_delta < 0:
+            coal_delta_dir = 'down'
+        else:
+            coal_delta_dir = 'up'
     else:
-        coal_delta_dir = 'up'
+        coal_delta_dir = "(no trading session)"
 
     gas_closing_price = values['gas_close']
     gas_np_closing_price = values['gas_np_close']
     gas_delta = round(gas_closing_price - gas_np_closing_price, 1)
-    if gas_delta < 0:
-        gas_delta_dir = 'down'
+
+    if gas_closing_price > 0:
+        if gas_delta < 0:
+            gas_delta_dir = 'down'
+        else:
+            gas_delta_dir = 'up'
     else:
-        gas_delta_dir = 'up'
+        gas_delta_dir = "(no trading session)"
 
     carbon_closing_price = values['co2_close']
     carbon_np_closing_price = values['co2_np_close']
     carbon_delta = round(carbon_closing_price - carbon_np_closing_price, 1)
-    if carbon_delta < 0:
-        carbon_delta_dir = 'down'
+
+    if carbon_closing_price > 0:
+        if carbon_delta < 0:
+            carbon_delta_dir = 'down'
+        else:
+            carbon_delta_dir = 'up'
     else:
-        carbon_delta_dir = 'up'
+        carbon_delta = "(no trading session)"
 
     current_oil_price = values['oil_last_price']
     oil_delta = values['oil_last_delta']
@@ -117,7 +139,7 @@ def generate_report_comment(values: dict, dt: date):
     overall_weather_dir = 'drier'
     if overall_weather_wetter_cnt >= 2:
         overall_weather_dir == 'wetter'
-    overall_thermals_up_cnt = sum([1 if el == 'up' else 0 for el in overall_weather_dir_arr])
+    overall_thermals_up_cnt = sum([1 if el == 'up' else 0 for el in overall_thermals_dir_arr])
     if overall_thermals_up_cnt > 2:
         overall_thermals_dir = 'mostly higher'
     elif overall_thermals_up_cnt == 2:
@@ -125,9 +147,9 @@ def generate_report_comment(values: dict, dt: date):
     else:
         overall_thermals_dir = 'mostly lower'
 
-    if (overall_weather_dir == 'wetter') & (overall_thermals_dir == 'down'):
+    if (overall_weather_dir == 'wetter') & (overall_thermals_dir == 'mostly higher'):
         overall_dir = 'down'
-    elif (overall_weather_dir == 'drier') & (overall_thermals_dir == 'up'):
+    elif (overall_weather_dir == 'drier') & (overall_thermals_dir == 'mostly lower'):
         overall_dir = 'up'
     else:
         overall_dir = 'sideways'
@@ -144,7 +166,7 @@ def generate_report_comment(values: dict, dt: date):
     f"Unadjusted EC12 is forecasting {ec12_precip} TWh, {abs(ec12_precip_delta_norm)} TWh ",
     f"{ec12_precip_norm_dir} normal and {abs(ec12_precip_delta_prev)} TWh {ec12_precip_prev_dir} ",
     f"than EC00 yesterday. EC12 ensemble mean for the next 10 days predicts {ec12ens_precip} TWh, {abs(ec12ens_precip_delta_norm)} ",
-    f"TWh {ec12ens_precip_norm_dir} than normal and {abs(ec12ens_precip_delta_prev)} TWh {ec12ens_precip_prev_dir} than EC00 ens yesterday. ",
+    f"TWh {ec12ens_precip_norm_dir} normal and {abs(ec12ens_precip_delta_prev)} TWh {ec12ens_precip_prev_dir} than EC00 ens yesterday. ",
     f"In ensemble, the temperature index is at {ec12ens_temp} degrees, {abs(ec12ens_temp_delta_prev)} {ec12ens_temp_prev_dir} than earlier ensemble.\n",
     f"Coal Q{front_quarter}-{front_quarter_year} closed at {coal_closing_price} USD/t{friday}, {coal_delta_dir} by {abs(coal_delta)} ",
     f"USD/t after NP close. Gas TTF Q{front_quarter}-{front_quarter_year} contract closed at {gas_closing_price} EUR/MWh, ",
@@ -166,7 +188,7 @@ def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspow
     :return:
     """
 
-    logging.basicConfig(level=logging.DEBUG)
+    config_logging(out_folder)
 
     # generate output file path
     out_file = out_folder + '/' + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
