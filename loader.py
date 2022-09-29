@@ -74,8 +74,14 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
     export_link = driver.find_element(By.PARTIAL_LINK_TEXT, value='excel')
     export_link.click()
 
-    # wait a bit
-    time.sleep(15)
+    # wait until file is loaded or time out
+    montel_data_files = [el for el in os.listdir(download_dir) if 'export' in el.lower()]
+    timer = 5
+    while (not montel_data_files) & (timer < 160):
+        print(f'Loading excel data file: timer={timer}')
+        time.sleep(timer)
+        montel_data_files = [el for el in os.listdir(download_dir) if 'export' in el.lower()]
+        timer = timer * 2
 
     # wait until download process is completed
     # paths = WebDriverWait(driver, 120, 1).until(every_downloads_chrome)
