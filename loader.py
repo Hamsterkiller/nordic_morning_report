@@ -117,7 +117,7 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
         if not cutted_to_np_close_data.empty:
             np_close_price = cutted_to_np_close_data['price'].tail(1).values[0]
         else:
-            np_close_price = close_price
+            np_close_price = data['price'].head(1).values[0]
 
     # close the window with data - no more need in it
     driver.close()
