@@ -147,9 +147,13 @@ def generate_report_comment(values: dict, dt: date):
     else:
         overall_thermals_dir = 'mostly lower'
 
-    if (overall_weather_dir == 'wetter') & (overall_thermals_dir == 'mostly higher'):
+    if (overall_weather_dir == 'wetter') & (overall_thermals_dir == 'mostly lower'):
         overall_dir = 'down'
-    elif (overall_weather_dir == 'drier') & (overall_thermals_dir == 'mostly lower'):
+    elif (overall_weather_dir == 'drier') & (overall_thermals_dir == 'mostly higher'):
+        overall_dir = 'up'
+    elif (overall_weather_dir == 'wetter') & (overall_thermals_dir == 'mixed'):
+        overall_dir = 'down'
+    elif (overall_weather_dir == 'drier') & (overall_thermals_dir == 'mixed'):
         overall_dir = 'up'
     else:
         overall_dir = 'sideways'

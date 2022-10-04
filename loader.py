@@ -77,7 +77,7 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
     # wait until file is loaded or time out
     montel_data_files = [el for el in os.listdir(download_dir) if 'export' in el.lower()]
     timer = 5
-    while (not montel_data_files) & (timer < 160):
+    while (not montel_data_files) & (timer <= 20):
         print(f'Loading excel data file: timer={timer}')
         time.sleep(timer)
         montel_data_files = [el for el in os.listdir(download_dir) if 'export' in el.lower()]
@@ -284,7 +284,7 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
     wait = WebDriverWait(driver, 10)
 
     # set prefered window size
-    driver.set_window_size(height=1024, width=768)
+    #driver.set_window_size(height=1024, width=768)
 
     # authenticate to Syspower
     try:
@@ -336,6 +336,19 @@ def load_thermals_data(dt: date, download_dir: str):
     :param dt: target date
     :return:
     """
+    def get_next_quarter(dt: date):
+        current_quarter = (dt.month - 1) // 3 + 1
+        if current_quarter == 4:
+            next_quarter = 1
+        else:
+            next_quarter = current_quarter + 1
+        return next_quarter
+
+    front_quarter_str = f'Q{get_next_quarter(dt)}-{dt.year + (get_next_quarter(dt) == 1)}'
+    # Ljuba said that next MidDec period is incremented somewhere in the last days of the current year
+    # let it be 5 days
+    lookforward_date = dt + timedelta(days=4)
+    mid_dec_str = f'MidDec-{lookforward_date.year}'
 
     headers = {
         'authority': 'www.montelnews.com',
@@ -395,7 +408,12 @@ def load_thermals_data(dt: date, download_dir: str):
     time.sleep(5)
 
     # Choose last trading session
-    fq_last = driver.find_element(by='id', value='ctl00_m_r6_C_t6_et_b5e8fd6b4f518dbfa10dedb5c6cd0040_LL')
+    data_table = driver.find_element(By.CSS_SELECTOR, value='#ctl00_m_r6_C_t6_et_table')
+    row_list = data_table.find_elements(By.TAG_NAME, value='tr')
+    target_row = [el for el in row_list if front_quarter_str in el.text][0]
+    target_row_cell_links = target_row.find_elements(By.TAG_NAME, value='a')
+    fq_last = target_row_cell_links[len(target_row_cell_links) - 1]
+    # fq_last = driver.find_element(by='id', value='ctl00_m_r6_C_t6_et_b5e8fd6b4f518dbfa10dedb5c6cd0040_LL')
     fq_last.send_keys(Keys.RETURN)
 
     # wait until second window is open
@@ -413,7 +431,12 @@ def load_thermals_data(dt: date, download_dir: str):
     time.sleep(5)
 
     # Choose last trading session
-    fq_last = driver.find_element(by='id', value='ctl00_m_r2_C_t2_et_2361a5c262b088be50e9ea1ff52f76e8_LL')
+    data_table = driver.find_element(By.CSS_SELECTOR, value='#ctl00_m_r2_C_t2_et_table')
+    row_list = data_table.find_elements(By.TAG_NAME, value='tr')
+    target_row = [el for el in row_list if front_quarter_str in el.text][0]
+    target_row_cell_links = target_row.find_elements(By.TAG_NAME, value='a')
+    fq_last = target_row_cell_links[len(target_row_cell_links) - 1]
+    # fq_last = driver.find_element(by='id', value='ctl00_m_r2_C_t2_et_2361a5c262b088be50e9ea1ff52f76e8_LL')
     fq_last.send_keys(Keys.RETURN)
 
     # wait until second window is open
@@ -431,7 +454,12 @@ def load_thermals_data(dt: date, download_dir: str):
     time.sleep(5)
 
     # Choose last trading session
-    fq_last = driver.find_element(by='id', value='ctl00_m_rd2_C_t5_et_40d5cd17e40f478082b8321264995f18_LL')
+    data_table = driver.find_element(By.CSS_SELECTOR, value='#ctl00_m_rd2_C_t5_et_table')
+    row_list = data_table.find_elements(By.TAG_NAME, value='tr')
+    target_row = [el for el in row_list if mid_dec_str in el.text][0]
+    target_row_cell_links = target_row.find_elements(By.TAG_NAME, value='a')
+    fq_last = target_row_cell_links[len(target_row_cell_links) - 1]
+    # fq_last = driver.find_element(by='id', value='ctl00_m_rd2_C_t5_et_40d5cd17e40f478082b8321264995f18_LL')
     fq_last.send_keys(Keys.RETURN)
 
     # wait until second window is open
@@ -447,10 +475,15 @@ def load_thermals_data(dt: date, download_dir: str):
     # get oil brent data
     driver.get('https://app.montelnews.com/Exchanges/ICE/Brent.aspx?74')
     time.sleep(10)
-    oil_last_price = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_LL')
-    oil_last_price = float(oil_last_price.text)
-    oil_last_delta = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_Chg')
-    oil_last_delta = float(oil_last_delta.text)
+    data_table = driver.find_element(By.CSS_SELECTOR, value='#ctl00_m_e0_C_t3_et_table')
+    row_list = data_table.find_elements(By.TAG_NAME, value='tr')
+    target_row = row_list[3].text.split(' ')
+    #oil_last_price = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_LL')
+    # oil_last_price = float(oil_last_price.text)
+    oil_last_price = float(target_row[8])
+    #oil_last_delta = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_Chg')
+    # oil_last_delta = float(oil_last_delta.text)
+    oil_last_delta = float(target_row[9])
 
     # close all the browser
     driver.close()
