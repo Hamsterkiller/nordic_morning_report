@@ -19,6 +19,15 @@ def config_logging(out_folder: str):
     logging.basicConfig(filename=out_folder + '/morning_report_logs.log', level=logging.INFO)
 
 
+def get_next_quarter(dt: date):
+    current_quarter = (dt.month - 1) // 3 + 1
+    if current_quarter == 4:
+        next_quarter = 1
+    else:
+        next_quarter = current_quarter + 1
+    return next_quarter
+
+
 def generate_report_comment(values: dict, dt: date):
     """
     Produce comment text
@@ -86,7 +95,8 @@ def generate_report_comment(values: dict, dt: date):
     else:
         ec12ens_temp_prev_dir = 'warmer'
 
-    front_quarter = int(math.fmod((np.ceil(dt.month / 3) + 1), 4) + 1)
+    front_quarter = get_next_quarter(dt)
+    # front_quarter = int(math.fmod((np.ceil(dt.month / 3) + 1), 4) + 1)
     front_quarter_year = int(math.fmod((dt.today().year + (front_quarter < int((np.ceil(dt.month / 3))))), 2000))
 
     # THERMALS
