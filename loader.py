@@ -108,7 +108,7 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
         data['datetime'] = pd.to_datetime(data['datetime'], yearfirst=True)
         data.sort_values(['datetime'], inplace=True)
         data['price'] = pd.to_numeric(data['price'])
-        close_price = data['price'].tail(1).values[0]
+        # close_price = data['price'].tail(1).values[0]
         if dt.weekday() > 0:
             pred_dt = dt - timedelta(days=1)
         else:
@@ -125,7 +125,7 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
     # back to main window
     driver.switch_to.window(original_window)
 
-    return close_price, np_close_price
+    return np_close_price
 
 
 def montel_log_out(driver: webdriver, original_window: str):
@@ -344,6 +344,15 @@ def load_thermals_data(dt: date, download_dir: str):
             next_quarter = current_quarter + 1
         return next_quarter
 
+    # load closing prices for coal, gas and CO2 from series in Syspower
+    series_list = ['SKMIDXAPI2QFR1', 'SPCTTTFQFR1', 'NPEUACALFR1']
+    interval = 'day'
+    series_url = generate_series_url(series_list, interval, dt - timedelta(days=1), dt + timedelta(days=9))
+    coal_gas_co2_df = pd.read_csv(series_url, sep=';')
+    coal_close = coal_gas_co2_df.SKMIDXAPI2QFR1.values[0]
+    gas_close = coal_gas_co2_df.SPCTTTFQFR1.values[0]
+    co2_close = coal_gas_co2_df.NPEUACALFR1.values[0]
+
     front_quarter_str = f'Q{get_next_quarter(dt)}-{dt.year + (get_next_quarter(dt) == 1)}'
     # Ljuba said that next MidDec period is incremented somewhere in the last days of the current year
     # let it be 5 days
@@ -424,7 +433,7 @@ def load_thermals_data(dt: date, download_dir: str):
     time.sleep(5)
 
     # check if there is data in the previous session
-    coal_close, coal_np_close = get_prev_day_data(dt, driver, original_window, download_dir)
+    coal_np_close = get_prev_day_data(dt, driver, original_window, download_dir)
 
     # get page with gas data
     driver.get('https://app.montelnews.com/Exchanges/ICE/DutchNatGas.aspx?137')
@@ -447,7 +456,7 @@ def load_thermals_data(dt: date, download_dir: str):
     time.sleep(5)
 
     # check if there is data in the previous session
-    gas_close, gas_np_close = get_prev_day_data(dt, driver, original_window, download_dir)
+    gas_np_close = get_prev_day_data(dt, driver, original_window, download_dir)
 
     # get page with carbon data
     driver.get('https://app.montelnews.com/Exchanges/ICE/Co2.aspx?86')
@@ -470,7 +479,7 @@ def load_thermals_data(dt: date, download_dir: str):
     time.sleep(5)
 
     # check if there is data in the previous session
-    co2_close, co2_np_close = get_prev_day_data(dt, driver, original_window, download_dir)
+    co2_np_close = get_prev_day_data(dt, driver, original_window, download_dir)
 
     # get oil brent data
     driver.get('https://app.montelnews.com/Exchanges/ICE/Brent.aspx?74')
