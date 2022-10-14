@@ -594,7 +594,7 @@ def load_forward_data(dt: date):
     df = pd.read_csv(series_url, sep=';')
     german_close = round(df.EEXDEBQFR1.values[1], 2)
     delta_german_close = round(df.EEXDEBQFR1.values[1] - df.EEXDEBQFR1.values[0], 2)
-    np_close = round(df.EEXDEBQFR1.values[1], 2)
+    np_close = round(df.NPENOFUTBLQFR1.values[1], 2)
     delta_np_close = round(df.NPENOFUTBLQFR1.values[1] - df.NPENOFUTBLQFR1.values[0], 2)
     german_forward_data = {
         'german_close': german_close,
