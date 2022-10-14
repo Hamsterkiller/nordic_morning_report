@@ -14,6 +14,7 @@ import time
 from io import StringIO
 from datetime import datetime
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
 
 
 def every_downloads_chrome(driver: webdriver):
@@ -98,8 +99,7 @@ def get_prev_day_data(dt: date, driver: webdriver, original_window: str, downloa
             os.remove(download_dir + '/' + f)
     else:
         logging.error('Failed to download the montel data!')
-        return close_price, np_close_price
-
+        return np_close_price
 
     # read data from the downloaded file
     if not data.empty:
@@ -251,7 +251,7 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
                     na_records[row['#Day']] = k
         missed_data_msg = '\n'.join([f'{k}: {v}' for k, v in na_records.items()])
         logging.debug(f'Some data is not loaded: \n'
-                        f'{missed_data_msg}')
+                      f'{missed_data_msg}')
     df.fillna(0, inplace=True)
     # construct values dict
     values = {}
@@ -271,6 +271,7 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
     values['ec12_precip_delta_norm'] = np.round(values['ec12_precip'] - \
                                                 np.sum(df['SKMPENNP_N'].iloc[1: df.shape[0]]) / 1000, 1)
 
+
     # load ensemble forecasts data from Syspower through Selenium
     try:
         if 'mac' in platform.platform():
@@ -284,7 +285,7 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
     wait = WebDriverWait(driver, 10)
 
     # set prefered window size
-    #driver.set_window_size(height=1024, width=768)
+    # driver.set_window_size(height=1024, width=768)
 
     # authenticate to Syspower
     try:
@@ -295,6 +296,14 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
     # get weather panel page
     driver.get('https://syspower5.skm.no/desktop/364/1/15')
     time.sleep(5)
+
+    # find date picker combobox
+    date_p_selector = '#desktop-content > div > div._3NmFTnNW1Jd3IVJM-cPZDm > div:nth-child(2) > div:nth-child(1) > div.d-flex.flex-wrap.align-items-center > div > div > select'
+    date_picker = driver.find_element(By.CSS_SELECTOR, value=date_p_selector)
+    date_picker = Select(date_picker)
+    date_picker.select_by_index('1')
+    time.sleep(2)
+
     # get E12Ens data
     e12ens_button = driver.find_element(By.XPATH, "//button[contains(text(),'EC12 Ens')]")
     e12ens_button.click()
@@ -314,6 +323,58 @@ def load_weather_data(dt: date, syspower_login: str, syspower_pw: str):
     temp_values = temp_values.text.split('\n')
     temp_frcst = float(temp_values[7])
     temp_delta_prev = float(temp_values[13])
+
+    # if it's monday, then choose friday in date picker else - current date
+    if dt.weekday() == 0:
+        date_picker.select_by_index('4')
+        time.sleep(2)
+
+        # get EC12Adj data for friday
+        e12adj_button = driver.find_element(By.XPATH, "//button[contains(text(),'EC12 Adj')]")
+        e12adj_button.click()
+        time.sleep(2)
+        value_tables_fr = driver.find_elements(By.CSS_SELECTOR, value='._3JLoIh4MlgupAmYAArFi8Q')
+        precip_values_fr = value_tables_fr[0]
+        precip_values_fr = precip_values_fr.text.split('\n')
+        precip_values_fr = [el for el in precip_values_fr if el != 'adv']
+        precip_fr_frcst_ec12adj = float(precip_values_fr[6])
+        temp_values_fr = value_tables_fr[1]
+        temp_values_fr = temp_values_fr.text.split('\n')
+        temp_frcst_fr_ec12adj = float(temp_values_fr[6])
+
+        # get EC12 data for friday
+        e12_button = driver.find_element(By.XPATH, "//button[contains(text(),'EC12')]")
+        e12_button.click()
+        time.sleep(2)
+        value_tables_fr = driver.find_elements(By.CSS_SELECTOR, value='._3JLoIh4MlgupAmYAArFi8Q')
+        precip_values_fr = value_tables_fr[0]
+        precip_values_fr = precip_values_fr.text.split('\n')
+        precip_values_fr = [el for el in precip_values_fr if el != 'adv']
+        precip_fr_frcst_ec12 = float(precip_values_fr[6])
+        temp_values_fr = value_tables_fr[1]
+        temp_values_fr = temp_values_fr.text.split('\n')
+        temp_frcst_fr_ec12 = float(temp_values_fr[6])
+
+        # get EC00Ens data for friday
+        e00ens_button = driver.find_element(By.XPATH, "//button[contains(text(),'EC00 Ens')]")
+        e00ens_button.click()
+        time.sleep(2)
+        value_tables_fr = driver.find_elements(By.CSS_SELECTOR, value='._3JLoIh4MlgupAmYAArFi8Q')
+        precip_values_fr = value_tables_fr[0]
+        precip_values_fr = precip_values_fr.text.split('\n')
+        precip_values_fr = [el for el in precip_values_fr if el != 'adv']
+        precip_fr_frcst_ec00ens = float(precip_values_fr[7])
+        temp_values_fr = value_tables_fr[1]
+        temp_values_fr = temp_values_fr.text.split('\n')
+        temp_frcst_fr_ec00ens = float(temp_values_fr[7])
+
+        # store values to the result
+        values['precip_fr_frcst_ec12adj'] = precip_fr_frcst_ec12adj
+        values['temp_frcst_fr_ec12adj'] = temp_frcst_fr_ec12adj
+        values['precip_fr_frcst_ec12'] = precip_fr_frcst_ec12
+        values['temp_frcst_fr_ec12'] = temp_frcst_fr_ec12
+        values['precip_fr_frcst_ec00ens'] = precip_fr_frcst_ec00ens
+        values['temp_frcst_fr_ec00ens'] = temp_frcst_fr_ec00ens
 
     # store values to the result
     values['ec12ens_precip'] = round(precip_frcst, 1)
@@ -336,6 +397,7 @@ def load_thermals_data(dt: date, download_dir: str):
     :param dt: target date
     :return:
     """
+
     def get_next_quarter(dt: date):
         current_quarter = (dt.month - 1) // 3 + 1
         if current_quarter == 4:
@@ -347,7 +409,7 @@ def load_thermals_data(dt: date, download_dir: str):
     # load closing prices for coal, gas and CO2 from series in Syspower
     series_list = ['SKMIDXAPI2QFR1', 'SPCTTTFQFR1', 'NPEUACALFR1']
     interval = 'day'
-    series_url = generate_series_url(series_list, interval, dt - timedelta(days=1), dt + timedelta(days=9))
+    series_url = generate_series_url(series_list, interval, dt - timedelta(days=1), dt)
     coal_gas_co2_df = pd.read_csv(series_url, sep=';')
     coal_close = coal_gas_co2_df.SKMIDXAPI2QFR1.values[0]
     gas_close = coal_gas_co2_df.SPCTTTFQFR1.values[0]
@@ -487,10 +549,10 @@ def load_thermals_data(dt: date, download_dir: str):
     data_table = driver.find_element(By.CSS_SELECTOR, value='#ctl00_m_e0_C_t3_et_table')
     row_list = data_table.find_elements(By.TAG_NAME, value='tr')
     target_row = row_list[3].text.split(' ')
-    #oil_last_price = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_LL')
+    # oil_last_price = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_LL')
     # oil_last_price = float(oil_last_price.text)
     oil_last_price = float(target_row[8])
-    #oil_last_delta = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_Chg')
+    # oil_last_delta = driver.find_element(by='id', value='ctl00_m_e0_C_t3_et_0ba3fd3edc00a54941b7fd02ecb2d5aa_Chg')
     # oil_last_delta = float(oil_last_delta.text)
     oil_last_delta = float(target_row[9])
 
@@ -510,3 +572,34 @@ def load_thermals_data(dt: date, download_dir: str):
     }
 
     return result
+
+
+def load_forward_data(dt: date):
+    """
+    Loads data for german forward prices
+    :param dt: target date
+    :param syspower_login:
+    :param syspower_pw:
+    :return:
+    """
+
+    series_list = ['EEXDEBQFR1', 'NPENOFUTBLQFR1']
+
+    interval = 'day'
+    if dt.weekday() == 0:
+        lookup = 4
+    else:
+        lookup = 2
+    series_url = generate_series_url(series_list, interval, dt - timedelta(days=lookup), dt)
+    df = pd.read_csv(series_url, sep=';')
+    german_close = round(df.EEXDEBQFR1.values[1], 2)
+    delta_german_close = round(df.EEXDEBQFR1.values[1] - df.EEXDEBQFR1.values[0], 2)
+    np_close = round(df.EEXDEBQFR1.values[1], 2)
+    delta_np_close = round(df.NPENOFUTBLQFR1.values[1] - df.NPENOFUTBLQFR1.values[0], 2)
+    german_forward_data = {
+        'german_close': german_close,
+        'delta_german_close': delta_german_close,
+        'np_close': np_close,
+        'delta_np_close': delta_np_close
+    }
+    return german_forward_data
