@@ -409,7 +409,11 @@ def load_thermals_data(dt: date, download_dir: str):
     # load closing prices for coal, gas and CO2 from series in Syspower
     series_list = ['SKMIDXAPI2QFR1', 'SPCTTTFQFR1', 'NPEUACALFR1']
     interval = 'day'
-    series_url = generate_series_url(series_list, interval, dt - timedelta(days=1), dt)
+    if dt.weekday() == 0:
+        lag = 3
+    else:
+        lag = 1
+    series_url = generate_series_url(series_list, interval, dt - timedelta(days=lag), dt)
     coal_gas_co2_df = pd.read_csv(series_url, sep=';')
     coal_close = coal_gas_co2_df.SKMIDXAPI2QFR1.values[0]
     gas_close = coal_gas_co2_df.SPCTTTFQFR1.values[0]
