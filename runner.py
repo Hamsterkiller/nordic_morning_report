@@ -240,6 +240,11 @@ def generate_report_comment(values: dict, dt: date):
     else:
         ts_last = "last"
 
+    if dt.weekday() == 1:
+        rel_day_str = " (from the Friday's close)"
+    else:
+        rel_day_str = ""
+
     report_comment = ''.join([f"EC12 adjusted is forecasting {ec12_adj_precip} TWh, {abs(ec12_adj_precip_delta_norm)} TWh {ec12_adj_precip_norm_dir} normal " ,
     f"and {abs(ec12_adj_precip_delta_prev)} TWh {ec12_adj_precip_prev_dir} than EC12 SMHI yesterday{friday_ec12adj_precip_text}. ",
     f"Temperature index is at {ec12_adj_temp} degrees, {abs(ec12_adj_temp_delta_norm)}°C {ec12_adj_temp_norma_dir} than ",
@@ -254,9 +259,10 @@ def generate_report_comment(values: dict, dt: date):
     f"{gas_delta_dir} by {abs(gas_delta)} EUR/MWh after NP close. Carbon DEC-22 closed at {carbon_closing_price} EUR/t{friday} ",
     f"{carbon_delta_dir} by {abs(carbon_delta)} EUR/t after NP close. Oil Brent ",
     f"front month is traded at {current_oil_price} USD/bbl, {oil_delta_dir} by {abs(oil_delta)} USD/bbl this morning. ",
-    f"We expect market to open {overall_dir} on a back of {overall_weather_dir} weather forecasts and {overall_thermals_dir} thermals. \n",
-    f"German EEX Front quarter moved {abs(delta_german_close)} EUR/MWh {delta_german_close_dir} in {ts_last} trading session ",
-    f"and closed at {german_close} EUR/MWh, while NP Front quarter closed at {np_close} EUR/MWh, {delta_np_close} EUR/MWh {delta_np_close_dir} day-on-day."])
+    f"German EEX Front quarter moved {abs(delta_german_close)} EUR/MWh {delta_german_close_dir}{rel_day_str} in {ts_last} trading session ",
+    f"and closed at {german_close} EUR/MWh, while NP Front quarter closed at {np_close} EUR/MWh, {delta_np_close} EUR/MWh {delta_np_close_dir}{rel_day_str}.",
+    f"We expect market to open {overall_dir} on a back of {overall_weather_dir} weather forecasts and {overall_thermals_dir} thermals. \n"
+])
 
     return report_comment
 

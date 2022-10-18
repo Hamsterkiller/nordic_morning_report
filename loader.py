@@ -590,7 +590,7 @@ def load_forward_data(dt: date):
     series_list = ['EEXDEBQFR1', 'NPENOFUTBLQFR1']
 
     interval = 'day'
-    if dt.weekday() == 0:
+    if dt.weekday() < 2:
         lookup = 4
     else:
         lookup = 2
