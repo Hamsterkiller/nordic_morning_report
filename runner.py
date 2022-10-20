@@ -281,7 +281,7 @@ def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspow
     config_logging(out_folder)
 
     # generate output file path
-    out_file = out_folder + '/' + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
+    out_file = out_folder + '/morning_reports' + '/' + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
 
     # load german forwards information
     forward_data = load_forward_data(dt)
@@ -310,6 +310,8 @@ def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspow
     report_comment = generate_report_comment(report_values, dt)
 
     # save report_comment to txt file
+    if not 'morning_reports' in os.listdir(out_folder):
+        os.mkdir(out_folder + '/' + 'morning_reports')
     with open(out_file, 'w') as f:
         f.write(report_comment)
 
