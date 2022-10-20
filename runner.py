@@ -196,7 +196,7 @@ def generate_report_comment(values: dict, dt: date):
     overall_weather_wetter_cnt = sum([1 if el == 'wetter' else 0 for el in overall_weather_dir_arr])
     overall_weather_dir = 'drier'
     if overall_weather_wetter_cnt >= 2:
-        overall_weather_dir == 'wetter'
+        overall_weather_dir = 'wetter'
     overall_thermals_up_cnt = sum([1 if el == 'up' else 0 for el in overall_thermals_dir_arr])
     if overall_thermals_up_cnt > 2:
         overall_thermals_dir = 'mostly higher'
@@ -245,7 +245,8 @@ def generate_report_comment(values: dict, dt: date):
     else:
         rel_day_str = ""
 
-    report_comment = ''.join([f"EC12 adjusted is forecasting {ec12_adj_precip} TWh, {abs(ec12_adj_precip_delta_norm)} TWh {ec12_adj_precip_norm_dir} normal " ,
+    report_comment = ''.join([f"Market outlook {dt.isoformat()}:\n"
+    f"EC12 adjusted is forecasting {ec12_adj_precip} TWh, {abs(ec12_adj_precip_delta_norm)} TWh {ec12_adj_precip_norm_dir} normal " ,
     f"and {abs(ec12_adj_precip_delta_prev)} TWh {ec12_adj_precip_prev_dir} than EC12 SMHI yesterday{friday_ec12adj_precip_text}. ",
     f"Temperature index is at {ec12_adj_temp} degrees, {abs(ec12_adj_temp_delta_norm)}°C {ec12_adj_temp_norma_dir} than ",
     f"normal and {abs(ec12_adj_temp_delta_prev)}°C {ec12_adj_temp_prev_dir} than yesterday{friday_ec12adj_temp_text}. ",
