@@ -263,9 +263,23 @@ def generate_report_comment(values: dict, dt: date):
     f"German EEX Front quarter moved {abs(delta_german_close)} EUR/MWh {delta_german_close_dir}{rel_day_str} in {ts_last} trading session ",
     f"and closed at {german_close} EUR/MWh, while NP Front quarter closed at {np_close} EUR/MWh, {delta_np_close} EUR/MWh {delta_np_close_dir}{rel_day_str}.",
     f"We expect market to open {overall_dir} on a back of {overall_weather_dir} weather forecasts and {overall_thermals_dir} thermals. \n"
-])
+    ])
 
-    return report_comment
+    report_data = [['EC12 Adj. Precipitation', ec12_adj_precip, ec12_adj_precip_delta_prev],
+                   ['EC12 Adj. Temperature', ec12_adj_temp, ec12_adj_temp_delta_prev],
+                   ['EC12 Precipitation', ec12_precip, ec12_precip_delta_prev],
+                   ['EC12 Ensemble Precipitation', ec12ens_precip, ec12ens_precip_delta_prev],
+                   ['EC12 Ensemble Temperature', ec12ens_temp, ec12ens_temp_delta_prev],
+                   ['Coal Price', coal_closing_price, coal_delta],
+                   ['Gas Price', gas_closing_price, gas_delta],
+                   ['CO2 Price', carbon_closing_price, carbon_delta],
+                   ['Oil Price', current_oil_price, oil_delta],
+                   ['German EEX price', german_close, delta_german_close],
+                   ['NP closing price', np_close, delta_np_close]]
+
+    report_table = pd.DataFrame.from_records(report_data, columns=['Name', 'Value', 'Delta'])
+
+    return report_comment, report_table
 
 
 def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspower_pw: str):
@@ -281,7 +295,8 @@ def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspow
     config_logging(out_folder)
 
     # generate output file path
-    out_file = out_folder + '/morning_reports' + '/' + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
+    out_file_text = out_folder + '/morning_reports' + '/' + 'morning_report_' + f"""{dt.isoformat().replace('-', '_')}""" + '.txt'
+    out_file_table = out_folder + '/morning_reports' + '/' + 'morning_report_data_' + f"""{dt.isoformat().replace('-', '_')}""" + '.xlsx'
 
     # load german forwards information
     forward_data = load_forward_data(dt)
@@ -307,12 +322,15 @@ def generateMorningReport(dt: date, out_folder: str, syspower_login: str, syspow
     # with open('result_report_values', 'rb') as handle:
     #     report_values = pickle.load(handle)
 
-    report_comment = generate_report_comment(report_values, dt)
+    report_comment, report_table = generate_report_comment(report_values, dt)
 
     # save report_comment to txt file
     if not 'morning_reports' in os.listdir(out_folder):
         os.mkdir(out_folder + '/' + 'morning_reports')
-    with open(out_file, 'w') as f:
+    with open(out_file_text, 'w') as f:
         f.write(report_comment)
 
-    return out_file
+    # save data to excel spreadsheet document
+    report_table.to_excel(out_file_table, index=False)
+
+    return out_file_text, out_file_table

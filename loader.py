@@ -581,7 +581,7 @@ def load_thermals_data(dt: date, download_dir: str):
 def load_forward_data(dt: date):
     """
     Loads data for german forward prices
-    :param dt: target date
+    :param dt: target dateQ
     :param syspower_login:
     :param syspower_pw:
     :return:
