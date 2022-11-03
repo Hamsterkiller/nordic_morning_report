@@ -230,7 +230,7 @@ def generate_report_comment(values: dict, dt: date):
 
     np_close = values['np_close']
     delta_np_close = values['delta_np_close']
-    if delta_german_close < 0:
+    if delta_np_close < 0:
         delta_np_close_dir = 'down'
     else:
         delta_np_close_dir = 'up'
@@ -261,7 +261,7 @@ def generate_report_comment(values: dict, dt: date):
     f"{carbon_delta_dir} by {abs(carbon_delta)} EUR/t after NP close. Oil Brent ",
     f"front month is traded at {current_oil_price} USD/bbl, {oil_delta_dir} by {abs(oil_delta)} USD/bbl this morning. ",
     f"German EEX Front quarter moved {abs(delta_german_close)} EUR/MWh {delta_german_close_dir}{rel_day_str} in {ts_last} trading session ",
-    f"and closed at {german_close} EUR/MWh, while NP Front quarter closed at {np_close} EUR/MWh, {delta_np_close} EUR/MWh {delta_np_close_dir}{rel_day_str}.",
+    f"and closed at {german_close} EUR/MWh, while NP Front quarter closed at {np_close} EUR/MWh, {abs(delta_np_close)} EUR/MWh {delta_np_close_dir}{rel_day_str}.",
     f"We expect market to open {overall_dir} on a back of {overall_weather_dir} weather forecasts and {overall_thermals_dir} thermals. \n"
     ])
 
