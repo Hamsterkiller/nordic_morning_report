@@ -137,9 +137,9 @@ def generate_report_comment(values: dict, dt: date):
 
         ec12ens_temp_delta_fr = round(values['ec12ens_temp'] - values['temp_frcst_fr_ec00ens'], 1)
         if ec12ens_temp_delta_fr < 0:
-            friday_ec12ens_temp_text = f" ({np.abs(ec12adj_temp_delta_fr)} TWh colder than on Friday)"
+            friday_ec12ens_temp_text = f" ({np.abs(ec12adj_temp_delta_fr)} °C colder than on Friday)"
         elif ec12ens_temp_delta_fr > 0:
-            friday_ec12ens_temp_text = f" ({np.abs(ec12adj_temp_delta_fr)} TWh warmer than on Friday)"
+            friday_ec12ens_temp_text = f" ({np.abs(ec12adj_temp_delta_fr)} °C warmer than on Friday)"
         else:
             friday_ec12ens_temp_text = "(equal to last Friday's value)"
 
