@@ -422,7 +422,7 @@ def load_thermals_data(dt: date, download_dir: str):
     front_quarter_str = f'Q{get_next_quarter(dt)}-{dt.year + (get_next_quarter(dt) == 1)}'
     # Ljuba said that next MidDec period is incremented somewhere in the last days of the current year
     # let it be 5 days
-    lookforward_date = dt + timedelta(days=4)
+    lookforward_date = dt + timedelta(days=11)
     mid_dec_str = f'MidDec-{lookforward_date.year}'
 
     headers = {
